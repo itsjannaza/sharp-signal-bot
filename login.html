@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sharp Bot Pro — Premium License Portal</title>
+  <style>
+    :root {
+      --bg-dark: #030711;
+      --bg-glow-1: rgba(0, 229, 255, 0.16);
+      --bg-glow-2: rgba(59, 130, 246, 0.14);
+      --card-bg: rgba(9, 17, 34, 0.88);
+      --input-bg: #050c19;
+      --border: rgba(0, 229, 255, 0.26);
+      --border-focus: #00e5ff;
+      --accent: #00e5ff;
+      --accent-2: #38bdf8;
+      --text: #f1f6ff;
+      --muted: #93abd0;
+      --err-bg: rgba(255, 61, 87, 0.14);
+      --err-border: #ff3d57;
+      --err-text: #ff94a2;
+    }
+
+    * { box-sizing: border-box; font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background-color: var(--bg-dark);
+      background-image:
+        radial-gradient(circle at 18% 15%, var(--bg-glow-1), transparent 42%),
+        radial-gradient(circle at 82% 85%, var(--bg-glow-2), transparent 45%),
+        linear-gradient(rgba(0, 229, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 229, 255, 0.035) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-wrapper { width: 100%; max-width: 460px; }
+
+    .auth-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 32px 28px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65), 0 0 38px rgba(0, 229, 255, 0.14);
+      text-align: center;
+    }
+
+    .top-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 13px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: rgba(0, 229, 255, 0.09);
+      border: 1px solid rgba(0, 229, 255, 0.32);
+      margin-bottom: 16px;
+    }
+
+    .shield-ring {
+      width: 66px;
+      height: 66px;
+      margin: 0 auto 14px auto;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      background: linear-gradient(145deg, rgba(0, 229, 255, 0.18), rgba(37, 99, 235, 0.16));
+      border: 1px solid rgba(0, 229, 255, 0.4);
+      box-shadow: 0 0 24px rgba(0, 229, 255, 0.22);
+    }
+
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 1.1px;
+      background: linear-gradient(90deg, #ffffff 0%, #7dd3fc 50%, #00e5ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle { margin: 0 0 22px 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+
+    .field-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      color: var(--accent-2);
+      margin-bottom: 8px;
+      text-align: left;
+    }
+
+    .key-input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1.5px solid var(--border);
+      background: var(--input-bg);
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1.6px;
+      text-align: center;
+      transition: all 0.2s ease;
+      margin-bottom: 14px;
+    }
+
+    .key-input:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 4px rgba(0, 229, 255, 0.15), 0 0 20px rgba(0, 229, 255, 0.25);
+    }
+
+    .unlock-btn {
+      width: 100%;
+      padding: 14px 18px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #0099ff 0%, #00e5ff 100%);
+      color: #03101a;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(0, 229, 255, 0.28);
+    }
+
+    .error-box {
+      background: var(--err-bg);
+      border: 1px solid var(--err-border);
+      color: var(--err-text);
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .admin-footer {
+      margin-top: 22px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(147, 171, 208, 0.16);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .admin-footer a { color: var(--accent); text-decoration: none; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <div class="top-badge">⚡ Sharp Engine v2.7 • License Auth</div>
+      <div class="shield-ring">🛡️</div>
+      <h1>SHARP SIGNAL BOT PRO</h1>
+      <p class="subtitle">
+        Premium Trading Terminal Access — Enter Your License Key to Unlock
+      </p>
+
+      {% if error %}
+        <div class="error-box">⚠️ {{ error }}</div>
+      {% endif %}
+
+      <form method="POST" autocomplete="off">
+        <div class="field-label">
+          <span>License Key</span>
+          <span>Production</span>
+        </div>
+        <input
+          id="licenseInput"
+          class="key-input"
+          type="text"
+          name="license_key"
+          placeholder="PASTE OR TYPE LICENSE KEY"
+          spellcheck="false"
+          autocapitalize="characters"
+          required
+          autofocus
+        />
+        <button class="unlock-btn" type="submit">🔓 Unlock Premium Dashboard</button>
+      </form>
+
+      <div class="admin-footer">
+        Contact Admin on Telegram: <a href="{{ admin_url }}" target="_blank">{{ admin_url }}</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const keyInput = document.getElementById("licenseInput");
+    keyInput.addEventListener("paste", () => {
+      setTimeout(() => { keyInput.value = keyInput.value.trim(); }, 10);
+    });
+  </script>
+</body>
+</html>

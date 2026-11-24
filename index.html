@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sharp Bot Pro — Live Market Signal Engine</title>
+  <style>
+    :root {
+      --bg: #040812;
+      --card: #0b1324;
+      --card-2: #070d19;
+      --border: #1b2d4e;
+      --accent: #00e5ff;
+      --buy: #00e676;
+      --sell: #ff3d57;
+      --warn: #ffab00;
+      --text: #eaf2ff;
+      --muted: #8aa2c8;
+    }
+    * { box-sizing: border-box; font-family: "Segoe UI", Arial, sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); padding: 14px; }
+    .container { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 0 28px rgba(0, 229, 255, 0.06);
+    }
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .brand-area { display: flex; flex-direction: column; gap: 3px; }
+    .title { font-size: 20px; font-weight: 800; color: var(--accent); letter-spacing: 0.8px; }
+    .sub-contact { font-size: 12px; color: var(--muted); }
+    .sub-contact a { color: var(--accent); text-decoration: none; font-weight: 600; }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .pill {
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #0f203c;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .pill.secure { border-color: #00e67655; color: var(--buy); }
+    .logout-link {
+      font-size: 12px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: #24111a;
+      border: 1px solid #ff3d5755;
+      color: #ff7b8b;
+      text-decoration: none;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    select, input[type="text"], button {
+      background: #101d36;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      width: 100%;
+    }
+    button { cursor: pointer; font-weight: 600; }
+    button.btn-primary {
+      background: linear-gradient(90deg, #00b8d4, #00e5ff);
+      color: #031018;
+      font-weight: 800;
+      border: none;
+      letter-spacing: 0.5px;
+    }
+    button.btn-primary:disabled { opacity: 0.6; cursor: wait; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .metric {
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
+    }
+    .metric-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.6px; }
+    .metric-val { font-size: 23px; font-weight: 800; }
+    .buy { color: var(--buy); }
+    .sell { color: var(--sell); }
+    .warn { color: var(--warn); }
+    .reason-bar {
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: var(--card-2);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    #tv_chart { width: 100%; height: 490px; }
+    .footer-note {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .footer-note a { color: var(--accent); text-decoration: none; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 9px 11px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+    th { color: var(--muted); background: var(--card-2); }
+    .mini-btn { padding: 4px 8px; font-size: 11px; border-radius: 6px; width: auto; margin-right: 4px; }
+    .mini-win { border-color: var(--buy); color: var(--buy); }
+    .mini-loss { border-color: var(--sell); color: var(--sell); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="brand-area">
+          <div class="title">⚡ SHARP SIGNAL BOT PRO — REAL CHART SYNC</div>
+          <div class="sub-contact">
+            Admin Telegram: <a href="{{ admin_url }}" target="_blank">{{ admin_url }}</a>
+          </div>
+        </div>
+        <div class="badges">
+          <div class="pill secure">🛡️ License: {{ user_role }}</div>
+          <div class="pill" id="syncStatus">Sync: Live</div>
+          <div class="pill" id="tgStatus">Telegram: Checking...</div>
+          <div class="pill" id="winRateBadge">Win Rate: 0% (0W / 0L)</div>
+          <a class="logout-link" href="/logout">Lock / Logout</a>
+        </div>
+      </div>
+
+      <div class="controls">
+        <select id="categorySelect" onchange="onCategoryChange()">
+          <option value="ALL">ALL MARKETS</option>
+          <option value="FOREX LIVE">FOREX LIVE</option>
+          <option value="FOREX OTC">FOREX OTC</option>
+          <option value="COMMODITIES">COMMODITIES & OTC</option>
+          <option value="CRYPTO">CRYPTOCURRENCY</option>
+          <option value="STOCKS">US STOCKS</option>
+          <option value="INDICES">GLOBAL INDICES</option>
+        </select>
+
+        <input type="text" id="pairSearch" placeholder="Search pair (EUR/USD, OTC, BTC)..." oninput="filterPairs()" />
+
+        <select id="pairSelect" onchange="onPairChange()"></select>
+
+        <select id="tfSelect" onchange="renderChart()">
+          <option value="1">1 Min</option>
+          <option value="5">5 Min</option>
+          <option value="15">15 Min</option>
+          <option value="60">1 Hour</option>
+        </select>
+
+        <button id="voiceBtn" onclick="toggleVoice()">🔊 Voice: ON</button>
+        <button class="btn-primary" id="genBtn" onclick="generateNewSignal()">⚡ NEW SIGNAL</button>
+      </div>
+
+      <div class="grid">
+        <div class="metric">
+          <div class="metric-label">NEXT TRADE SIGNAL</div>
+          <div class="metric-val" id="sigDir">READY</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">CONFIDENCE SCORE</div>
+          <div class="metric-val" id="sigConf">0%</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">ENTRY COUNTDOWN</div>
+          <div class="metric-val" id="sigTimer">0s</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">SELECTED ASSET</div>
+          <div class="metric-val" id="sigPair" style="font-size: 17px;">EUR/USD</div>
+        </div>
+      </div>
+
+      <div class="reason-bar">
+        <span id="sigReason">Ready for live market scan.</span>
+        <span>Webhook Secret: <code>{{ webhook_secret }}</code></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="tv_chart"></div>
+      <div class="footer-note">
+        <span id="chartNote">TradingView Real-Time Chart Active.</span>
+        <span>Admin Telegram: <a href="{{ admin_url }}" target="_blank">{{ admin_url }}</a></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="header" style="margin-bottom: 10px;">
+        <div class="title" style="font-size: 16px;">📊 SIGNAL HISTORY & ACCURACY LOG</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Time</th>
+              <th>Market</th>
+              <th>Asset</th>
+              <th>TF</th>
+              <th>Signal</th>
+              <th>Confidence</th>
+              <th>Result</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr><td colspan="9" style="color: var(--muted);">No signals recorded yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://s3.tradingview.com/tv.js"></script>
+  <script>
+    const ALL_ASSETS = [
+      { cat: "FOREX LIVE", pair: "EUR/USD", tv: "FX:EURUSD" },
+      { cat: "FOREX LIVE", pair: "GBP/USD", tv: "FX:GBPUSD" },
+      { cat: "FOREX LIVE", pair: "USD/JPY", tv: "FX:USDJPY" },
+      { cat: "FOREX LIVE", pair: "USD/CHF", tv: "FX:USDCHF" },
+      { cat: "FOREX LIVE", pair: "AUD/USD", tv: "FX:AUDUSD" },
+      { cat: "FOREX LIVE", pair: "USD/CAD", tv: "FX:USDCAD" },
+      { cat: "FOREX LIVE", pair: "NZD/USD", tv: "FX:NZDUSD" },
+      { cat: "FOREX LIVE", pair: "EUR/GBP", tv: "FX:EURGBP" },
+      { cat: "FOREX LIVE", pair: "EUR/JPY", tv: "FX:EURJPY" },
+      { cat: "FOREX LIVE", pair: "EUR/CHF", tv: "FX:EURCHF" },
+      { cat: "FOREX LIVE", pair: "EUR/AUD", tv: "FX:EURAUD" },
+      { cat: "FOREX LIVE", pair: "EUR/CAD", tv: "FX:EURCAD" },
+      { cat: "FOREX LIVE", pair: "EUR/NZD", tv: "FX:EURNZD" },
+      { cat: "FOREX LIVE", pair: "GBP/JPY", tv: "FX:GBPJPY" },
+      { cat: "FOREX LIVE", pair: "GBP/CHF", tv: "FX:GBPCHF" },
+      { cat: "FOREX LIVE", pair: "GBP/AUD", tv: "FX:GBPAUD" },
+      { cat: "FOREX LIVE", pair: "GBP/CAD", tv: "FX:GBPCAD" },
+      { cat: "FOREX LIVE", pair: "GBP/NZD", tv: "FX:GBPNZD" },
+      { cat: "FOREX LIVE", pair: "CHF/JPY", tv: "FX:CHFJPY" },
+      { cat: "FOREX LIVE", pair: "AUD/JPY", tv: "FX:AUDJPY" },
+      { cat: "FOREX LIVE", pair: "CAD/JPY", tv: "FX:CADJPY" },
+      { cat: "FOREX LIVE", pair: "NZD/JPY", tv: "FX:NZDJPY" },
+      { cat: "FOREX LIVE", pair: "AUD/CHF", tv: "FX:AUDCHF" },
+      { cat: "FOREX LIVE", pair: "CAD/CHF", tv: "FX:CADCHF" },
+      { cat: "FOREX LIVE", pair: "NZD/CHF", tv: "FX:NZDCHF" },
+      { cat: "FOREX LIVE", pair: "AUD/CAD", tv: "FX:AUDCAD" },
+      { cat: "FOREX LIVE", pair: "AUD/NZD", tv: "FX:AUDNZD" },
+      { cat: "FOREX LIVE", pair: "NZD/CAD", tv: "FX:NZDCAD" },
+      { cat: "FOREX LIVE", pair: "USD/SGD", tv: "FX:USDSGD" },
+      { cat: "FOREX LIVE", pair: "USD/HKD", tv: "FX:USDHKD" },
+      { cat: "FOREX LIVE", pair: "USD/TRY", tv: "FX:USDTRY" },
+      { cat: "FOREX LIVE", pair: "USD/MXN", tv: "FX:USDMXN" },
+      { cat: "FOREX LIVE", pair: "USD/ZAR", tv: "FX:USDZAR" },
+      { cat: "FOREX LIVE", pair: "USD/PLN", tv: "FX:USDPLN" },
+      { cat: "FOREX LIVE", pair: "USD/NOK", tv: "FX:USDNOK" },
+      { cat: "FOREX LIVE", pair: "USD/SEK", tv: "FX:USDSEK" },
+      { cat: "FOREX LIVE", pair: "USD/DKK", tv: "FX:USDDKK" },
+      { cat: "FOREX LIVE", pair: "EUR/TRY", tv: "FX:EURTRY" },
+      { cat: "FOREX LIVE", pair: "EUR/PLN", tv: "FX:EURPLN" },
+      { cat: "FOREX LIVE", pair: "EUR/SGD", tv: "FX:EURSGD" },
+      { cat: "FOREX LIVE", pair: "EUR/ZAR", tv: "FX:EURZAR" },
+      { cat: "FOREX LIVE", pair: "GBP/SGD", tv: "FX:GBPSGD" },
+      { cat: "FOREX LIVE", pair: "GBP/ZAR", tv: "FX:GBPZAR" },
+      { cat: "FOREX LIVE", pair: "GBP/TRY", tv: "FX:GBPTRY" },
+      { cat: "FOREX LIVE", pair: "USD/INR", tv: "FX_IDC:USDINR" },
+      { cat: "FOREX LIVE", pair: "USD/BRL", tv: "FX_IDC:USDBRL" },
+      { cat: "FOREX LIVE", pair: "USD/PKR", tv: "FX_IDC:USDPKR" },
+      { cat: "FOREX LIVE", pair: "USD/BDT", tv: "FX_IDC:USDBDT" },
+      { cat: "FOREX LIVE", pair: "USD/IDR", tv: "FX_IDC:USDIDR" },
+      { cat: "FOREX LIVE", pair: "USD/PHP", tv: "FX_IDC:USDPHP" },
+      { cat: "FOREX LIVE", pair: "USD/EGP", tv: "FX_IDC:USDEGP" },
+      { cat: "FOREX LIVE", pair: "USD/ARS", tv: "FX_IDC:USDARS" },
+      { cat: "FOREX LIVE", pair: "USD/COP", tv: "FX_IDC:USDCOP" },
+      { cat: "FOREX LIVE", pair: "USD/NGN", tv: "FX_IDC:USDNGN" },
+      { cat: "FOREX LIVE", pair: "USD/DZD", tv: "FX_IDC:USDDZD" },
+      { cat: "FOREX OTC", pair: "EUR/USD OTC", tv: "FX:EURUSD" },
+      { cat: "FOREX OTC", pair: "GBP/USD OTC", tv: "FX:GBPUSD" },
+      { cat: "FOREX OTC", pair: "USD/JPY OTC", tv: "FX:USDJPY" },
+      { cat: "FOREX OTC", pair: "USD/CHF OTC", tv: "FX:USDCHF" },
+      { cat: "FOREX OTC", pair: "AUD/USD OTC", tv: "FX:AUDUSD" },
+      { cat: "FOREX OTC", pair: "USD/CAD OTC", tv: "FX:USDCAD" },
+      { cat: "FOREX OTC", pair: "NZD/USD OTC", tv: "FX:NZDUSD" },
+      { cat: "FOREX OTC", pair: "EUR/GBP OTC", tv: "FX:EURGBP" },
+      { cat: "FOREX OTC", pair: "EUR/JPY OTC", tv: "FX:EURJPY" },
+      { cat: "FOREX OTC", pair: "GBP/JPY OTC", tv: "FX:GBPJPY" },
+      { cat: "FOREX OTC", pair: "EUR/AUD OTC", tv: "FX:EURAUD" },
+      { cat: "FOREX OTC", pair: "GBP/AUD OTC", tv: "FX:GBPAUD" },
+      { cat: "FOREX OTC", pair: "EUR/CAD OTC", tv: "FX:EURCAD" },
+      { cat: "FOREX OTC", pair: "GBP/CAD OTC", tv: "FX:GBPCAD" },
+      { cat: "FOREX OTC", pair: "EUR/CHF OTC", tv: "FX:EURCHF" },
+      { cat: "FOREX OTC", pair: "GBP/CHF OTC", tv: "FX:GBPCHF" },
+      { cat: "FOREX OTC", pair: "AUD/JPY OTC", tv: "FX:AUDJPY" },
+      { cat: "FOREX OTC", pair: "CAD/JPY OTC", tv: "FX:CADJPY" },
+      { cat: "FOREX OTC", pair: "CHF/JPY OTC", tv: "FX:CHFJPY" },
+      { cat: "FOREX OTC", pair: "NZD/JPY OTC", tv: "FX:NZDJPY" },
+      { cat: "FOREX OTC", pair: "AUD/CAD OTC", tv: "FX:AUDCAD" },
+      { cat: "FOREX OTC", pair: "AUD/CHF OTC", tv: "FX:AUDCHF" },
+      { cat: "FOREX OTC", pair: "AUD/NZD OTC", tv: "FX:AUDNZD" },
+      { cat: "FOREX OTC", pair: "CAD/CHF OTC", tv: "FX:CADCHF" },
+      { cat: "FOREX OTC", pair: "NZD/CAD OTC", tv: "FX:NZDCAD" },
+      { cat: "FOREX OTC", pair: "NZD/CHF OTC", tv: "FX:NZDCHF" },
+      { cat: "FOREX OTC", pair: "EUR/NZD OTC", tv: "FX:EURNZD" },
+      { cat: "FOREX OTC", pair: "GBP/NZD OTC", tv: "FX:GBPNZD" },
+      { cat: "FOREX OTC", pair: "EUR/SGD OTC", tv: "FX:EURSGD" },
+      { cat: "FOREX OTC", pair: "USD/SGD OTC", tv: "FX:USDSGD" },
+      { cat: "FOREX OTC", pair: "USD/INR OTC", tv: "FX_IDC:USDINR" },
+      { cat: "FOREX OTC", pair: "USD/BRL OTC", tv: "FX_IDC:USDBRL" },
+      { cat: "FOREX OTC", pair: "USD/TRY OTC", tv: "FX:USDTRY" },
+      { cat: "FOREX OTC", pair: "USD/MXN OTC", tv: "FX:USDMXN" },
+      { cat: "FOREX OTC", pair: "USD/ZAR OTC", tv: "FX:USDZAR" },
+      { cat: "FOREX OTC", pair: "USD/PKR OTC", tv: "FX_IDC:USDPKR" },
+      { cat: "FOREX OTC", pair: "USD/BDT OTC", tv: "FX_IDC:USDBDT" },
+      { cat: "FOREX OTC", pair: "USD/IDR OTC", tv: "FX_IDC:USDIDR" },
+      { cat: "FOREX OTC", pair: "USD/PHP OTC", tv: "FX_IDC:USDPHP" },
+      { cat: "FOREX OTC", pair: "USD/EGP OTC", tv: "FX_IDC:USDEGP" },
+      { cat: "FOREX OTC", pair: "USD/ARS OTC", tv: "FX_IDC:USDARS" },
+      { cat: "FOREX OTC", pair: "USD/COP OTC", tv: "FX_IDC:USDCOP" },
+      { cat: "FOREX OTC", pair: "USD/DZD OTC", tv: "FX_IDC:USDDZD" },
+      { cat: "FOREX OTC", pair: "USD/NGN OTC", tv: "FX_IDC:USDNGN" },
+      { cat: "COMMODITIES", pair: "USOIL", tv: "TVC:USOIL" },
+      { cat: "COMMODITIES", pair: "UKOIL", tv: "TVC:UKOIL" },
+      { cat: "COMMODITIES", pair: "WTI Crude Oil", tv: "NYMEX:CL1!" },
+      { cat: "COMMODITIES", pair: "Brent Crude Oil", tv: "ICEEUR:BRN1!" },
+      { cat: "COMMODITIES", pair: "Natural Gas", tv: "NYMEX:NG1!" },
+      { cat: "COMMODITIES", pair: "USOIL OTC", tv: "TVC:USOIL" },
+      { cat: "COMMODITIES", pair: "UKOIL OTC", tv: "TVC:UKOIL" },
+      { cat: "CRYPTO", pair: "BTC/USD", tv: "BINANCE:BTCUSDT" },
+      { cat: "CRYPTO", pair: "ETH/USD", tv: "BINANCE:ETHUSDT" },
+      { cat: "CRYPTO", pair: "LTC/USD", tv: "BINANCE:LTCUSDT" },
+      { cat: "CRYPTO", pair: "XRP/USD", tv: "BINANCE:XRPUSDT" },
+      { cat: "CRYPTO", pair: "BCH/USD", tv: "BINANCE:BCHUSDT" },
+      { cat: "CRYPTO", pair: "EOS/USD", tv: "BINANCE:EOSUSDT" },
+      { cat: "CRYPTO", pair: "ADA/USD", tv: "BINANCE:ADAUSDT" },
+      { cat: "CRYPTO", pair: "DOT/USD", tv: "BINANCE:DOTUSDT" },
+      { cat: "CRYPTO", pair: "LINK/USD", tv: "BINANCE:LINKUSDT" },
+      { cat: "CRYPTO", pair: "UNI/USD", tv: "BINANCE:UNIUSDT" },
+      { cat: "CRYPTO", pair: "SOL/USD", tv: "BINANCE:SOLUSDT" },
+      { cat: "CRYPTO", pair: "AVAX/USD", tv: "BINANCE:AVAXUSDT" },
+      { cat: "CRYPTO", pair: "DOGE/USD", tv: "BINANCE:DOGEUSDT" },
+      { cat: "CRYPTO", pair: "SHIB/USD", tv: "BINANCE:SHIBUSDT" },
+      { cat: "CRYPTO", pair: "BNB/USD", tv: "BINANCE:BNBUSDT" },
+      { cat: "STOCKS", pair: "AAPL (Apple)", tv: "NASDAQ:AAPL" },
+      { cat: "STOCKS", pair: "MSFT (Microsoft)", tv: "NASDAQ:MSFT" },
+      { cat: "STOCKS", pair: "AMZN (Amazon)", tv: "NASDAQ:AMZN" },
+      { cat: "STOCKS", pair: "GOOGL (Google)", tv: "NASDAQ:GOOGL" },
+      { cat: "STOCKS", pair: "TSLA (Tesla)", tv: "NASDAQ:TSLA" },
+      { cat: "STOCKS", pair: "META (Meta)", tv: "NASDAQ:META" },
+      { cat: "STOCKS", pair: "NFLX (Netflix)", tv: "NASDAQ:NFLX" },
+      { cat: "STOCKS", pair: "NVDA (Nvidia)", tv: "NASDAQ:NVDA" },
+      { cat: "STOCKS", pair: "AMD", tv: "NASDAQ:AMD" },
+      { cat: "STOCKS", pair: "INTC (Intel)", tv: "NASDAQ:INTC" },
+      { cat: "STOCKS", pair: "BA (Boeing)", tv: "NYSE:BA" },
+      { cat: "STOCKS", pair: "KO (Coca-Cola)", tv: "NYSE:KO" },
+      { cat: "STOCKS", pair: "DIS (Disney)", tv: "NYSE:DIS" },
+      { cat: "STOCKS", pair: "MCD (McDonald's)", tv: "NYSE:MCD" },
+      { cat: "STOCKS", pair: "NKE (Nike)", tv: "NYSE:NKE" },
+      { cat: "STOCKS", pair: "V (Visa)", tv: "NYSE:V" },
+      { cat: "STOCKS", pair: "MA (Mastercard)", tv: "NYSE:MA" },
+      { cat: "STOCKS", pair: "PYPL (PayPal)", tv: "NASDAQ:PYPL" },
+      { cat: "STOCKS", pair: "SHOP (Shopify)", tv: "NYSE:SHOP" },
+      { cat: "STOCKS", pair: "ZM (Zoom)", tv: "NASDAQ:ZM" },
+      { cat: "INDICES", pair: "US500 (S&P 500)", tv: "FOREXCOM:SPXUSD" },
+      { cat: "INDICES", pair: "US100 (Nasdaq 100)", tv: "FOREXCOM:NSXUSD" },
+      { cat: "INDICES", pair: "US30 (Dow Jones)", tv: "FOREXCOM:DJI" },
+      { cat: "INDICES", pair: "UK100 (FTSE 100)", tv: "FOREXCOM:UKXGBP" },
+      { cat: "INDICES", pair: "DE40 (DAX 40)", tv: "FOREXCOM:GRXEUR" },
+      { cat: "INDICES", pair: "FR40 (CAC 40)", tv: "FOREXCOM:FRXEUR" },
+      { cat: "INDICES", pair: "JP225 (Nikkei 225)", tv: "FOREXCOM:JP225" },
+      { cat: "INDICES", pair: "HK50 (Hang Seng)", tv: "FOREXCOM:HK50" },
+      { cat: "INDICES", pair: "AU200 (ASX 200)", tv: "FOREXCOM:AU200" },
+      { cat: "INDICES", pair: "EU50 (Euro Stoxx 50)", tv: "FOREXCOM:EU50" }
+    ];
+
+    let lastSignalId = 0;
+    let voiceEnabled = true;
+    let timerHandle = null;
+
+    function filterPairs(targetPair = null) {
+      const cat = document.getElementById("categorySelect").value;
+      const query = document.getElementById("pairSearch").value.trim().toLowerCase();
+      const select = document.getElementById("pairSelect");
+
+      const filtered = ALL_ASSETS.filter(item => {
+        const matchCat = cat === "ALL" || item.cat === cat;
+        const matchQuery = !query || item.pair.toLowerCase().includes(query) || item.cat.toLowerCase().includes(query);
+        return matchCat && matchQuery;
+      });
+
+      select.innerHTML = "";
+      filtered.forEach((item, idx) => {
+        const opt = document.createElement("option");
+        opt.value = item.tv;
+        opt.textContent = item.pair;
+        opt.dataset.cat = item.cat;
+        if ((targetPair && item.pair === targetPair) || (!targetPair && idx === 0)) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+      updateChartNote();
+    }
+
+    function updateChartNote() {
+      const opt = document.getElementById("pairSelect").selectedOptions[0];
+      const label = opt ? opt.textContent : "";
+      const isOtc = label.includes("OTC");
+      document.getElementById("chartNote").textContent = isOtc
+        ? `OTC Mode (${label}): Broker OTC quotes may differ from live reference feed.`
+        : `Live Market (${label}): Real-Time TradingView Chart & Indicator Engine Active.`;
+    }
+
+    function onCategoryChange() { filterPairs(); onPairChange(); }
+    function onPairChange() {
+      const opt = document.getElementById("pairSelect").selectedOptions[0];
+      if (!opt) return;
+      document.getElementById("sigPair").textContent = opt.textContent;
+      updateChartNote();
+      renderChart();
+    }
+
+    function renderChart() {
+      const opt = document.getElementById("pairSelect").selectedOptions[0];
+      if (!opt) return;
+      document.getElementById("tv_chart").innerHTML = "";
+      new TradingView.widget({
+        container_id: "tv_chart",
+        autosize: true,
+        symbol: opt.value,
+        interval: document.getElementById("tfSelect").value,
+        timezone: "Asia/Karachi",
+        theme: "dark",
+        style: "1",
+        locale: "en",
+        toolbar_bg: "#0b1324",
+        enable_publishing: false,
+        hide_side_toolbar: false,
+        allow_symbol_change: true
+      });
+    }
+
+    function toggleVoice() {
+      voiceEnabled = !voiceEnabled;
+      document.getElementById("voiceBtn").textContent = voiceEnabled ? "🔊 Voice: ON" : "🔇 Voice: OFF";
+    }
+
+    function speak(text) {
+      if (!voiceEnabled || !("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.rate = 1.0;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function startCountdown(seconds) {
+      clearInterval(timerHandle);
+      let left = Math.max(1, Number(seconds) || 10);
+      document.getElementById("sigTimer").textContent = `${left}s`;
+      timerHandle = setInterval(() => {
+        left -= 1;
+        document.getElementById("sigTimer").textContent = `${Math.max(left, 0)}s`;
+        if (left <= 0) {
+          clearInterval(timerHandle);
+          speak("Enter trade now.");
+        }
+      }, 1000);
+    }
+
+    function renderHistory(history) {
+      const tbody = document.getElementById("historyBody");
+      if (!history || history.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="color: var(--muted);">No signals recorded yet.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = history.map(item => {
+        const isBuy = String(item.direction).includes("BUY");
+        const dirClass = isBuy ? "buy" : "sell";
+        const resClass = item.result === "WIN" ? "buy" : (item.result === "LOSS" ? "sell" : "warn");
+        return `
+          <tr>
+            <td>${item.id}</td>
+            <td>${item.updated_at || ""}</td>
+            <td>${item.category || "MARKET"}</td>
+            <td><strong>${item.pair}</strong></td>
+            <td>${item.timeframe}</td>
+            <td class="${dirClass}"><strong>${item.direction}</strong></td>
+            <td>${item.confidence}%</td>
+            <td class="${resClass}"><strong>${item.result}</strong></td>
+            <td>
+              <button class="mini-btn mini-win" onclick="markResult(${item.id}, 'WIN')">WIN</button>
+              <button class="mini-btn mini-loss" onclick="markResult(${item.id}, 'LOSS')">LOSS</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function applyState(state) {
+      const sig = state.latest;
+      const stats = state.stats || { wins: 0, losses: 0, win_rate: 0 };
+      document.getElementById("tgStatus").textContent = state.telegram_configured
+        ? "Telegram: Connected"
+        : "Telegram: Ready (Add Token)";
+      document.getElementById("winRateBadge").textContent =
+        `Win Rate: ${stats.win_rate}% (${stats.wins}W / ${stats.losses}L)`;
+      renderHistory(state.history || []);
+
+      if (!sig || sig.id === 0) {
+        lastSignalId = 0;
+        document.getElementById("sigDir").textContent = "READY";
+        document.getElementById("sigDir").className = "metric-val";
+        document.getElementById("sigConf").textContent = "0%";
+        document.getElementById("sigTimer").textContent = "0s";
+        return;
+      }
+
+      const isBuy = String(sig.direction).includes("BUY");
+      const dirEl = document.getElementById("sigDir");
+      dirEl.textContent = sig.direction;
+      dirEl.className = `metric-val ${isBuy ? "buy" : "sell"}`;
+      document.getElementById("sigConf").textContent = `${sig.confidence}%`;
+      document.getElementById("sigPair").textContent = sig.pair;
+      document.getElementById("sigReason").textContent = `Logic: ${sig.reason} | ${sig.category} (${sig.timeframe})`;
+
+      if (sig.id !== lastSignalId) {
+        lastSignalId = sig.id;
+        filterPairs(sig.pair);
+        renderChart();
+        startCountdown(sig.entry_delay || 10);
+        speak(`Next trade on ${sig.pair}: ${isBuy ? "Buy" : "Sell"}. Confidence ${sig.confidence} percent.`);
+      }
+    }
+
+    async function pollState() {
+      try {
+        const res = await fetch("/api/state");
+        if (res.status === 401) { window.location.href = "/login"; return; }
+        if (!res.ok) throw new Error("Sync error");
+        const data = await res.json();
+        document.getElementById("syncStatus").textContent = "Sync: Live";
+        applyState(data);
+      } catch (e) {
+        document.getElementById("syncStatus").textContent = "Sync: Reconnecting...";
+      }
+    }
+
+    async function markResult(id, result) {
+      await fetch(`/api/signal/${id}/result`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ result })
+      });
+      pollState();
+    }
+
+    async function generateNewSignal() {
+      const opt = document.getElementById("pairSelect").selectedOptions[0];
+      const btn = document.getElementById("genBtn");
+      if (!opt) return;
+
+      btn.disabled = true;
+      btn.textContent = "⏳ ANALYZING...";
+      try {
+        await fetch("/api/generate-signal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            category: opt.dataset.cat || "FOREX LIVE",
+            pair: opt.textContent,
+            tv_symbol: opt.value,
+            timeframe: document.getElementById("tfSelect").value + "m",
+            entry_delay: 10
+          })
+        });
+        await pollState();
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "⚡ NEW SIGNAL";
+      }
+    }
+
+    document.getElementById("categorySelect").options[0].textContent = `ALL MARKETS (${ALL_ASSETS.length} ASSETS)`;
+    filterPairs("EUR/USD");
+    renderChart();
+    pollState();
+    setInterval(pollState, 3000);
+  </script>
+</body>
+</html>
